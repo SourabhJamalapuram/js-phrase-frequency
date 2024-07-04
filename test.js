@@ -54,6 +54,22 @@ async function getFileContents(filename){
     }
 }
 
+
+function groupPhrases(){
+    let str = "This is cool. wow, cool! test?";
+
+    let words = str.replace(/[^\w\s']/g, "") //get rid of punctuation
+    .replace(/\s+/g, " ") //get rid of line endings
+    .toLowerCase() //ensures case insensitive
+    .split(/\s+/) //splits the text into words
+    .filter(word => word.length > 0); //ensures there are no empty '' words
+
+    for(let i=0;i<words.length;++i){
+        let sequence = `${words[i]} ${words[i + 1]} ${words[i + 2]}`
+        console.log(sequence); 
+    }
+}
+
 function groupPhrases(){
     let str = "This is cool. wow, cool! test?";
     console.log(str + "\n")
@@ -71,7 +87,7 @@ function groupPhrases(){
                 word = '';
                 if (wordIndex === 3) {
                     let sequence = words.slice(0, 3);
-                    console.log(sequence); 
+                    console.log(); 
                     words[0] = words[1];
                     words[1] = words[2];
                     words[2] = '';
