@@ -3,25 +3,28 @@ const fs = require('fs').promises;
 
 let numOfPhrases = 5;
 
+// Validation Check: Verify the user has inputted a file for processing
 if (process.argv.length < 3) {
     console.log('Please Provide A Filename\nEx) node main.js <filename>');
     process.exit(1);
 
 }
 
+// List of filename(s) provided by user through command line arguments
 const filenames = process.argv.slice(2);
 
-//const testString = `This is a test string. This string is designed to test the trigram function. The trigram function should find the most common three-word sequences in this test string. This string includes multiple instances of some trigrams to ensure the function works correctly. The test string is not too long but should be sufficient for testing. This string includes some repeated sequences like 'this test string' and 'test the trigram'.`;
-
+//Function to modify text
 function cleanText(text){
-        return text.replace(/[^\w\s']/g, "")
-            .replace(/\s+/g, " ")
-            .toLowerCase(); 
+        return text.replace(/[^\w\s']/g, "") //get rid of punctuation
+            .replace(/\s+/g, " ") //get rid of line endings
+            .toLowerCase() //ensures case insensitive
+            .split(/\s+/) //splits the text into words
+            .filter(word => word.length > 0); //ensures there are no empty '' words
 }
 
+//Function to count the frequency phrases(three word sequences)
 function groupPhrases(text){
-    let cleanedText = cleanText(text);
-    let words = cleanedText.split(/\s+/).filter(word => word.length > 0);
+    let words = cleanText(text);
     let phraseFreqMap = {}
 
     for(let i=0;i<words.length - 2;++i){
@@ -33,7 +36,7 @@ function groupPhrases(text){
 }
 
 
-
+//Function to read and return the content from a singular file
 async function getFileContents(filename){
     try {
         const data = await fs.readFile(filename, 'utf8');
@@ -44,6 +47,7 @@ async function getFileContents(filename){
     }
 }
 
+//Function to aggregate frequency maps
 function mergePhraseFreqMaps(aggregatedMap, phraseFreqMap) {
     Object.keys(phraseFreqMap).forEach(key => {
         if (aggregatedMap[key]) {
