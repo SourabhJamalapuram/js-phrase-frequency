@@ -22,7 +22,7 @@ function groupPhrases(str){
         let word = ''; 
         
         for (let i = 0; i <= str.length; i++) {
-            if (!str[i]?.match(/\w/) || i === str.length) { 
+            if (!str[i]?.match(/[\p{L}\p{M}'-]+/u) || i === str.length) { // Updated regex pattern
                 if (word !== '') {
                     words[wordIndex] = word.toLowerCase(); 
                     wordIndex += 1;
@@ -60,7 +60,6 @@ async function getFileContents(filename){
 
 
 async function main(){
-
     for(const filename of filenames){
         const content = await getFileContents(filename)
         if (content) {
