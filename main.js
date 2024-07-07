@@ -1,18 +1,8 @@
 const fs = require('fs').promises;
+const readline = require('readline');
 
 let numOfPhrases = 5;
 
-//let freqMap = {}
-
-
-
-/*
-//Validation Check: Verify the user has inputted a file for processing
-if (process.argv.length < 3) {
-    console.log('Please Provide A Filename\nEx) node main.js <filename>');
-    process.exit(1);
-}
-*/
 
 //List of filename(s) provided by user through command line arguments
 const filenames = process.argv.slice(2);
@@ -52,18 +42,6 @@ function groupPhrases(str){
 }
 
 
-//Function to read and return the content from a singular file
-async function getFileContents(filename){
-    try {
-        const data = await fs.readFile(filename, 'utf8');
-        return data;
-    } catch (err) {
-        console.error(`Error reading file: ${err.message}`);
-        return null;
-    }
-}
-
-
 function printTopPhrases(map) {
     let top5Phrases = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
     console.log(top5Phrases);
@@ -86,71 +64,63 @@ function mergePhraseFreqMaps(map1, map2) {
         }
     });
 
-
-
     return mergedMap;
 }
 
 
 async function processFile(filename){
     let resultMap = {}
-    
-    const content = await getFileContents(filename)
-    if (content) {
-        let phraseMap = groupPhrases(content);
-        resultMap = mergePhraseFreqMaps(resultMap, phraseMap)
-    }else {
-        console.log(`Skipping ${filename} due to error reading file.`);
-    }
+
+    const content = await fs.readFile(filename, 'utf8');
+    let phraseMap = groupPhrases(content);
+    resultMap = mergePhraseFreqMaps(resultMap, phraseMap)
 
     return resultMap;
 }
 
-
-async function main(){
-    let resultMap = {}
-
-    let filePromises = filenames.map(filename => {
-        return processFile(filename)
+async function processStdin() {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false
     });
 
-    let processedMaps = await Promise.all(filePromises);
-    for(const map of processedMaps){
-        resultMap = mergePhraseFreqMaps(resultMap, map)
+    let content = '';
+    for await (const line of rl) {
+        content += line + '\n';
+    }
+
+    rl.close();
+
+    let phraseMap = groupPhrases(content);
+    return phraseMap;
+}
+
+async function main() {
+    let resultMap = {};
+
+    if (filenames.length > 0) {
+        let filePromises = filenames.map(filename => processFile(filename));
+        await Promise.allSettled(filePromises)
+            .then(results => {
+                results.forEach(result => {
+                    if (result.status == 'fulfilled') {
+                        resultMap = mergePhraseFreqMaps(resultMap, result.value);
+                    } else {
+                        console.log('Rejected: ', result.reason);
+                    }
+                });
+            });
+    } else {
+        resultMap = await processStdin();
     }
 
     printTopPhrases(resultMap);
-
-
-
-/*
-    for(const filename of filenames){
-        const content = await getFileContents(filename)
-       
-    }
-    printTopPhrases(resultMap);
-    */
 }
-
-/*
-async function main(){
-    for(const filename of filenames){
-        const content = await getFileContents(filename)
-        if (content) {
-            groupPhrases(content);
-        }else {
-            console.log(`Skipping ${filename} due to error reading file.`);
-        }
-    }
-
-    printTopPhrases();
-
-}
-*/
 
 
 if (require.main === module) {
     main();
 }
 
-module.exports = { groupPhrases };
+module.exports = { groupPhrases, mergePhraseFreqMaps, processFile };
