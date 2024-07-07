@@ -1,40 +1,54 @@
 const fs = require('fs').promises;
 
-
 let numOfPhrases = 5;
 
-let freqMap = {}
+//let freqMap = {}
 
+
+
+/*
 //Validation Check: Verify the user has inputted a file for processing
 if (process.argv.length < 3) {
     console.log('Please Provide A Filename\nEx) node main.js <filename>');
     process.exit(1);
-
 }
+*/
 
 //List of filename(s) provided by user through command line arguments
 const filenames = process.argv.slice(2);
 
-//Function to modify text
-function cleanText(text){
-        return text.replace(/[^\w\s']/g, "") //get rid of punctuation
-            .replace(/\s+/g, " ") //get rid of line endings
-            .toLowerCase() //ensures case insensitive
-            .split(/\s+/) //splits the text into words
-            .filter(word => word.length > 0); //ensures there are no empty '' words
-}
 
 //Function to count the frequency phrases(three word sequences)
-function groupPhrases(text){
-    let words = cleanText(text);
-    //let phraseFreqMap = {}
+function groupPhrases(str){
+        let phraseMap = {};
 
-    for(let i=0;i<words.length - 2;++i){
-        let key = `${words[i]} ${words[i+1]} ${words[i+2]}`
-        freqMap[key] = freqMap[key] ? freqMap[key] + 1 : 1;
-    }
+        let wordIndex = 0;
+        let words = [];
+        let word = ''; 
+        
+        for (let i = 0; i <= str.length; i++) {
+            if (!str[i]?.match(/[\p{L}\p{M}'-]+/u) || i === str.length) { // Updated regex pattern
+                if (word !== '') {
+                    words[wordIndex] = word.toLowerCase(); 
+                    wordIndex += 1;
+                    word = '';
+                    if (wordIndex === 3) {
+                        let key = `${words[0]} ${words[1]} ${words[2]}`
 
-    //return phraseFreqMap;
+                        phraseMap[key] = phraseMap[key] ? phraseMap[key] + 1 : 1;
+
+                        words[0] = words[1];
+                        words[1] = words[2];
+                        words[2] = '';
+                        wordIndex = 2;
+                    }
+                }
+            } else {
+                word += str[i];
+            }
+        }
+
+        return phraseMap;
 }
 
 
@@ -49,23 +63,77 @@ async function getFileContents(filename){
     }
 }
 
-/*
-//Function to aggregate frequency maps
-function mergePhraseFreqMaps(aggregatedMap, phraseFreqMap) {
-    Object.keys(phraseFreqMap).forEach(key => {
-        if (aggregatedMap[key]) {
-            aggregatedMap[key] += phraseFreqMap[key];
-        } else {
-            aggregatedMap[key] = phraseFreqMap[key];
+
+function printTopPhrases(map) {
+    let top5Phrases = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    console.log(top5Phrases);
+}
+
+function mergePhraseFreqMaps(map1, map2) {
+    let mergedMap = {}
+
+    Object.keys(map1).forEach(key => {
+        if(map2.hasOwnProperty(key)){
+            mergedMap[key] = map1[key] + map2[key]
+        } else{
+            mergedMap[key] = map1[key]
         }
     });
+
+    Object.keys(map2).forEach(key => {
+        if(!map1.hasOwnProperty(key)){
+            mergedMap[key] = map2[key]
+        }
+    });
+
+
+
+    return mergedMap;
 }
-*/
+
+
+async function processFile(filename){
+    let resultMap = {}
+    
+    const content = await getFileContents(filename)
+    if (content) {
+        let phraseMap = groupPhrases(content);
+        resultMap = mergePhraseFreqMaps(resultMap, phraseMap)
+    }else {
+        console.log(`Skipping ${filename} due to error reading file.`);
+    }
+
+    return resultMap;
+}
 
 
 async function main(){
-    //let aggregatedPhraseFreqMap = {};
+    let resultMap = {}
 
+    let filePromises = filenames.map(filename => {
+        return processFile(filename)
+    });
+
+    let processedMaps = await Promise.all(filePromises);
+    for(const map of processedMaps){
+        resultMap = mergePhraseFreqMaps(resultMap, map)
+    }
+
+    printTopPhrases(resultMap);
+
+
+
+/*
+    for(const filename of filenames){
+        const content = await getFileContents(filename)
+       
+    }
+    printTopPhrases(resultMap);
+    */
+}
+
+/*
+async function main(){
     for(const filename of filenames){
         const content = await getFileContents(filename)
         if (content) {
@@ -75,29 +143,14 @@ async function main(){
         }
     }
 
-    let top5Phrases = Object.entries(freqMap).sort((a,b) => b[1] - a[1]).slice(0,5)
-    console.log(top5Phrases)
-
-    /*
-    for (const filename of filenames) {
-        const content = await getFileContents(filename);
-        if (content) {
-            let phraseFreqMap = groupPhrases(content);
-            mergePhraseFreqMaps(aggregatedPhraseFreqMap, phraseFreqMap);
-        } else {
-            console.log(`Skipping ${filename} due to error reading file.`);
-        }
-    }
-
-    let aggregatedPhraseArray = Object.entries(aggregatedPhraseFreqMap);
-    aggregatedPhraseArray.sort((a, b) => b[1] - a[1]);
-
-    let top5Phrases = aggregatedPhraseArray.slice(0, numOfPhrases);
-
-    console.log("Top 5 phrases across all files:");
-    console.log(top5Phrases);
-    */
+    printTopPhrases();
 
 }
+*/
 
-main()
+
+if (require.main === module) {
+    main();
+}
+
+module.exports = { groupPhrases };
