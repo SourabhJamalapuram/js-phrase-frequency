@@ -1,7 +1,14 @@
 const assert = require('assert');
 const mainModule = require('./main');
 
-//Group Phrases
+function colorizeGreen(message) {
+    return `\x1b[32m${message}\x1b[0m`;  
+}
+
+function colorizeRed(message) {
+    return `\x1b[31m${message}\x1b[0m`; 
+}
+
 function testIgnoresPunctuation() {
     const { groupPhrases } = mainModule;
 
@@ -13,10 +20,9 @@ function testIgnoresPunctuation() {
         assert.strictEqual(freqMap['ignoring correctly this'], 1, 'Sequence should ignore question mark');
         assert.strictEqual(freqMap['be analyzed correctly'], 1, 'Sequence should ignore exclamation point');
 
-        console.log('\u2714 Passed: Ignores Punctuation');
+        console.log(colorizeGreen('\u2714 Passed: Ignores Punctuation'));
     } catch (err) {
-        console.error(`Error in testIgnoresPunctuation: ${err.message}`);
-        console.error(err.stack); 
+        console.error(colorizeRed(`\u2714 Failed - Ignores Punctuation: ${err.message}`));
     }
 }
 
@@ -27,22 +33,21 @@ function testLineEndings() {
         let freqMap = groupPhrases('Test\n this phrase');
     
         assert.strictEqual(freqMap['test this phrase'], 1, 'Sequence should ignore line ending');
-        console.log('\u2714 Passed: Ignores Line Endings');
+        console.log(colorizeGreen('\u2714 Passed: Ignores Line Endings'));
     } catch (err) {
-        console.error('\u2718 Failed: ', err.message);
+        console.error(colorizeRed(`\u2714 Failed - Ignores Line Endings: ${err.message}`));
     }
 }
 
 function testIsCaseInsensitive() {
     const { groupPhrases } = mainModule;
-
     try {
         let freqMap = groupPhrases('This sentence, with its commas and periods. Is it ignoring correctly? This should be analyzed correctly!');
     
         assert.strictEqual(freqMap['this sentence with'], 1, 'Sequence should be case insensitive');
-        console.log('\u2714 Passed: Is Case Insensitive');
+        console.log(colorizeGreen('\u2714 Passed: Is Case Insensitive'));
     } catch (err) {
-        console.error('\u2718 Failed: ', err.message);
+        console.error(colorizeRed(`\u2714 Failed - Is Case Insensitive: ${err.message}`));
     }
 }
 
@@ -50,10 +55,10 @@ function testHandlesContractions() {
     const { groupPhrases } = mainModule;
     try {
         let freqMap = groupPhrases("this shouldn't fail");
-        assert.strictEqual(freqMap["this shouldn't fail"], 1, 'Seperating contraction');
-        console.log('\u2714 Passed: Handles Contractions');
+        assert.strictEqual(freqMap["this shouldn't fail"], 1, 'Should not seperate contraction');
+        console.log(colorizeGreen('\u2714 Passed: Handles Contractions'));
     } catch (err) {
-        console.error('\u2718 Failed: ', err.message);
+        console.error(colorizeRed(`\u2714 Failed - Handles Contractions: ${err.message}`));
     }
 }
 
@@ -66,11 +71,10 @@ function testMergeMaps() {
 
         let actualMergedMap = mergePhraseFreqMaps(map1, map2);
         let expected = {'a': 15, 'b' : 50, c:100}
-        assert.deepEqual(actualMergedMap, expected, 'Maps should be deeply equal');
-        console.log('\u2714 Passed: Merge Maps');
-
+        assert.deepEqual(actualMergedMap, expected, 'Maps should merge(add) coexisting keys and add any remaining ones');
+        console.log(colorizeGreen('\u2714 Passed: Merge Maps'));
     } catch (err) {
-        console.error('\u2718 Failed: ', err.message);
+        console.error(colorizeRed(`\u2714 Failed - Merge Maps: ${err.message}`));
     }
 }
 
@@ -83,10 +87,10 @@ function testProcessInvalidFile(){
             return err.message.includes(`ENOENT: no such file or directory, open '/invalid.txt'`);
         }, 'Promise should reject with expected error message for invalid file');
 
-        console.log('\u2714 Passed: Test Invalid File');
+        console.log(colorizeGreen('\u2714 Passed: Test Invalid File'));
 
     } catch (err) {
-        console.error('\u2718 Failed: ', err.message);
+        console.error(colorizeRed(`\u2714 Failed - Test Invalid File: ${err.message}`));
     }
 }
 
