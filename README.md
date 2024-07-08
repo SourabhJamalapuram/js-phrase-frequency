@@ -8,7 +8,9 @@
    - `node main.js <filename1> <filename2> ...`
 
 #### Note
-A couple of text files are included in the repository if you would like to use them for testing.
+Two text files are included in the repository if you would like to use them for testing.
+1. test-file1.txt
+2. test-file2.txt
 
 
 
