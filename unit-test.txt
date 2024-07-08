@@ -1,0 +1,1 @@
+This sentence, with its commas and periods. Is it ignoring correctly? This should be analyzed correctly!

@@ -1,7 +1,6 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const TOP_N_PHRASES = 5;
 
 //List of filename(s) provided by user through command line arguments
 const filenames = process.argv.slice(2);
@@ -16,12 +15,17 @@ async function processStdin() {
         input: process.stdin // Read from standard input
     });
 
-    try{
-        return await groupPhrases(rl)
-    } finally {
-        rl.close()
+    let content = '';
+
+    // Read input line by line
+    for await (const line of rl) {
+        content += line + '\n';
     }
 
+    rl.close(); // Close readline interface
+
+    // Return the map of grouped phrase frequencies
+    return groupPhrases(content);
 }
 
 /**
@@ -29,7 +33,19 @@ async function processStdin() {
  * @param {string} str - The input text containing the phrases that need to be analyzed
  * @returns {Object} - An object mapping each unique three-word phrase to its occurences.
  */
-async function groupPhrases(rl){
+/**
+ * Groups phrases of three consecutive words from a string and counts their occurrences
+ * @param {string} str - The input text containing the phrases that need to be analyzed
+ * @returns {Object} - An object mapping each unique three-word phrase to its occurences.
+ */
+async function groupPhrases(filename){
+    const readStream = fs.createReadStream(filename, { encoding: 'utf8' });
+
+    const rl = readline.createInterface({
+        input: readStream,
+        crlfDelay: Infinity // Read entire lines without truncating
+    });
+
     let wordCount = 0; // Initialize index for current word position
     let words = []; // Array to store up to three words
     let word = ''; // Variable to build current word
@@ -37,6 +53,8 @@ async function groupPhrases(rl){
     let phraseMap = {};
     
     for await (const line of rl) {
+        //console.log(line)
+
         for (let i = 0; i <= line.length; i++) {
             // Check if current character is not a part of a valid word (Unicode letters, apostrophes, hyphens)
             if (!line[i]?.match(/[\p{L}\p{M}'-]+/u) || i === line.length) { // Updated regex pattern
@@ -106,43 +124,36 @@ function mergePhraseFreqMaps(map1, map2) {
  * @returns {Promise<Object>} - A promise resolving to an object containing phrase frequencies.
  */
 async function processFile(filename){
-   // Read file content asynchronously
+    let resultMap = {}
+
+    // Read file content asynchronously
    // const content = await fs.readFile(filename, 'utf8');
 
     // Group phrases from content
-    const readStream = fs.createReadStream(filename, { encoding: 'utf8' });
+    let phraseMap = await groupPhrases(filename);
 
-    const rl = readline.createInterface({
-        input: readStream,
-        crlfDelay: Infinity // Read entire lines without truncating
-    });
+    // Merge phrase frequency maps
+    resultMap = mergePhraseFreqMaps(resultMap, phraseMap)
 
-    try{
-        let phraseMap = await groupPhrases(rl);
-        return phraseMap;
-    } finally{
-        rl.close()
-    }
-    
+    return resultMap;
 }
 
 
 /**
  * Prints the top N phrases from a given map, sorted by frequency.
  * @param {Object} map - The map object containing phrases as keys and their counts as values.
- * @param {number} n - The number of top phrases to print.
+ * @param {number} N - The number of top phrases to print.
  */
-function printTopPhrases(map, n) {
+function printTopPhrases(map, N) {
     // Sort phrases by frequency in descending order
-    let topPhrases = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, n);
+    let topPhrases = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, N);
     // Print the top N phrases and their frequencies
     console.log(topPhrases);
 }
 
 
 async function main() {
-    let executionTimerLabel = `Time Taken To Process`;
-    console.time(executionTimerLabel); // Start the timer
+    console.time('myFunction'); // Start the timer
     let resultMap = {}; // Initialize empty result map
 
     if (filenames.length > 0) { // Check if filenames are provided
@@ -166,8 +177,8 @@ async function main() {
         resultMap = await processStdin(); // Process stdin if no filenames are provided
     }
 
-    printTopPhrases(resultMap, TOP_N_PHRASES); // Print the top phrases by frequency
-    console.timeEnd(executionTimerLabel); // End the timer and log the time
+    printTopPhrases(resultMap, 5); // Print the top phrases by frequency
+    console.timeEnd('myFunction'); // End the timer and log the time
 }
 
 

@@ -1,7 +1,5 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const readline = require('readline');
-
-const TOP_N_PHRASES = 5;
 
 //List of filename(s) provided by user through command line arguments
 const filenames = process.argv.slice(2);
@@ -16,12 +14,17 @@ async function processStdin() {
         input: process.stdin // Read from standard input
     });
 
-    try{
-        return await groupPhrases(rl)
-    } finally {
-        rl.close()
+    let content = '';
+
+    // Read input line by line
+    for await (const line of rl) {
+        content += line + '\n';
     }
 
+    rl.close(); // Close readline interface
+
+    // Return the map of grouped phrase frequencies
+    return groupPhrases(content);
 }
 
 /**
@@ -29,29 +32,28 @@ async function processStdin() {
  * @param {string} str - The input text containing the phrases that need to be analyzed
  * @returns {Object} - An object mapping each unique three-word phrase to its occurences.
  */
-async function groupPhrases(rl){
-    let wordCount = 0; // Initialize index for current word position
-    let words = []; // Array to store up to three words
-    let word = ''; // Variable to build current word
+function groupPhrases(str){
+        let phraseMap = {};
 
-    let phraseMap = {};
-    
-    for await (const line of rl) {
-        for (let i = 0; i <= line.length; i++) {
+        let wordCount = 0; // Initialize index for current word position
+        let words = []; // Array to store up to three words
+        let word = ''; // Variable to build current word
+        
+        for (let i = 0; i <= str.length; i++) {
             // Check if current character is not a part of a valid word (Unicode letters, apostrophes, hyphens)
-            if (!line[i]?.match(/[\p{L}\p{M}'-]+/u) || i === line.length) { // Updated regex pattern
+            if (!str[i]?.match(/[\p{L}\p{M}'-]+/u) || i === str.length) { // Updated regex pattern
                 if (word !== '') {
                     words[wordCount] = word.toLowerCase(); // Convert word to lowercase and store in words array
                     wordCount += 1; // Move to the next word position
                     word = ''; // Reset word variable
-    
+
                     // Check if three words have been collected
                     if (wordCount == 3) {
                         let key = `${words[0]} ${words[1]} ${words[2]}` // Create key from the three word sequence
 
                         // Update frequency count of key(phrase)
                         phraseMap[key] = phraseMap[key] ? phraseMap[key] + 1 : 1;
-    
+
                         // Rotate words array to prepare for the next sequence
                         words[0] = words[1];
                         words[1] = words[2];
@@ -60,13 +62,12 @@ async function groupPhrases(rl){
                     }
                 }
             } else {
-                word += line[i]; 
+                word += str[i]; 
             }
         }
-    }
 
-    // Return the map of phrase frequencies
-    return phraseMap;
+        // Return the map of phrase frequencies
+        return phraseMap;
 }
 
 
@@ -106,43 +107,35 @@ function mergePhraseFreqMaps(map1, map2) {
  * @returns {Promise<Object>} - A promise resolving to an object containing phrase frequencies.
  */
 async function processFile(filename){
-   // Read file content asynchronously
-   // const content = await fs.readFile(filename, 'utf8');
+    let resultMap = {}
+
+    // Read file content asynchronously
+    const content = await fs.readFile(filename, 'utf8');
 
     // Group phrases from content
-    const readStream = fs.createReadStream(filename, { encoding: 'utf8' });
+    let phraseMap = groupPhrases(content);
 
-    const rl = readline.createInterface({
-        input: readStream,
-        crlfDelay: Infinity // Read entire lines without truncating
-    });
+    // Merge phrase frequency maps
+    resultMap = mergePhraseFreqMaps(resultMap, phraseMap)
 
-    try{
-        let phraseMap = await groupPhrases(rl);
-        return phraseMap;
-    } finally{
-        rl.close()
-    }
-    
+    return resultMap;
 }
 
 
 /**
  * Prints the top N phrases from a given map, sorted by frequency.
  * @param {Object} map - The map object containing phrases as keys and their counts as values.
- * @param {number} n - The number of top phrases to print.
+ * @param {number} N - The number of top phrases to print.
  */
-function printTopPhrases(map, n) {
+function printTopPhrases(map, N) {
     // Sort phrases by frequency in descending order
-    let topPhrases = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, n);
+    let topPhrases = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, N);
     // Print the top N phrases and their frequencies
     console.log(topPhrases);
 }
 
 
 async function main() {
-    let executionTimerLabel = `Time Taken To Process`;
-    console.time(executionTimerLabel); // Start the timer
     let resultMap = {}; // Initialize empty result map
 
     if (filenames.length > 0) { // Check if filenames are provided
@@ -152,11 +145,7 @@ async function main() {
             .then(results => {
                 results.forEach(result => {
                     if (result.status == 'fulfilled') {
-                        if(filenames.length == 1){
-                            resultMap = result.value
-                        }else{
-                            resultMap = mergePhraseFreqMaps(resultMap, result.value); // Merge results into resultMap
-                        }
+                        resultMap = mergePhraseFreqMaps(resultMap, result.value); // Merge results into resultMap
                     } else {
                         console.log('Rejected: ', result.reason); // Log any rejected promises
                     }
@@ -166,8 +155,7 @@ async function main() {
         resultMap = await processStdin(); // Process stdin if no filenames are provided
     }
 
-    printTopPhrases(resultMap, TOP_N_PHRASES); // Print the top phrases by frequency
-    console.timeEnd(executionTimerLabel); // End the timer and log the time
+    printTopPhrases(resultMap, 100); // Print the top phrases by frequency
 }
 
 
