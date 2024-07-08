@@ -1,4 +1,23 @@
 ## How To Run The Program
+### Without Docker
+1. Install Node.js (https://nodejs.org/en/download/package-manager)
+2. `git clone <repo name>`
+3. Open up terminal and go to project directory
+4. Run the program
+   - `cat <filename> | node main.js`
+   - `node main.js <filename1> <filename2> ...`
+
+#### Note
+A couple of text files are included in the repository if you would like to use them for testing.
+
+
+
+
+### With Docker
+
+## Sample Run
+
+
 
 ## Program Overview
 1. Program accepts one or more files / accepts input on stdin
@@ -14,6 +33,7 @@
 - Character pointer implementation was used in groupPhrases() instead of using JavaScript functions like split and replace. This approach minimizes overhead and memory consumption by avoiding multiple traversals of large datasets.
 
 ## What I Would Do Given More Time
+1. Couple Extensibility improvements. There are some extensibility features currently in place such as easily changing the top N number of phrases we want to see. Given more time I would refactor the code to work for other length of sequences and not just three word sequences.
 
 
 ## Are There Bugs That You Are Aware Of
