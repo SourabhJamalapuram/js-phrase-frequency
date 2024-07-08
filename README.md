@@ -33,6 +33,15 @@ Two text files are included in the repository if you would like to use them for 
 
 ## Sample Run
 
+1. Command Line Arguments
+
+<img width="544" alt="Screen Shot 2024-07-08 at 4 30 40 PM" src="https://github.com/SourabhJamalapuram/js-phrase-frequency/assets/11035797/0182dca3-284d-45d1-a2e7-461a5245ccaf">
+
+3. Stdin
+
+<img width="563" alt="Screen Shot 2024-07-08 at 4 32 20 PM" src="https://github.com/SourabhJamalapuram/js-phrase-frequency/assets/11035797/d5a0ed28-0293-459b-8ec2-ccf3f7ab88a9">
+
+
 
 ## Program Overview
 1. Program accepts one or more files / accepts input on stdin
