@@ -14,6 +14,12 @@ A couple of text files are included in the repository if you would like to use t
 
 
 ### With Docker
+1. `docker pull sourabhjam/sequence-analyzer`
+2. Run with provided txt file
+  - `docker run sourabhjam/sequence-analyzer test-file1.txt`
+2. Run with your own file in current directory
+  - Mac: `docker run -v "$(pwd)/files":/inputs sourabhjam/sequence-analyzer inputs/<filename>`
+  - Windows: `docker run -v c:/temp:/inputs sourabhjam/sequence-analyzer inputs/<filename>`
 
 ## Sample Run
 
