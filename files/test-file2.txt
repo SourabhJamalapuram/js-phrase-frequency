@@ -6,7 +6,7 @@ What is the meaning of this program? shouldn't this text is easier than bigger d
 bigger data sets are more complicated.
 
 
-this is crazy
-this is crazy
-wow this is crazy
-this is crazy wow 
+this algorithm is crazy
+this algorithm is insane
+this algorithm works so fast this algorithm is 
+the best

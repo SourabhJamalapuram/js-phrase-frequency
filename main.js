@@ -7,18 +7,21 @@ const TOP_N_PHRASES = 5;
 const filenames = process.argv.slice(2);
 
 /**
- * Asynchronously processes stdin to generate a map of phrase frequencies.
- * Reads input line by line, groups phrases, and returns the resulting phrase frequency map.
+ * Processes input on stdin
+ * Reads input line by line, passing it to groups phrases, and returns the resulting phrase frequency map.
  * @returns {Promise<Object>} - A promise resolving to an object containing phrase frequencies.
  */
 async function processStdin() {
+    // Create readline interface to read from standard input
     const rl = readline.createInterface({
-        input: process.stdin // Read from standard input
+        input: process.stdin
     });
 
     try{
+        // Call groupPhrases function asynchronously with the readline interface
         return await groupPhrases(rl)
     } finally {
+        // Close the readline interface after processing
         rl.close()
     }
 
@@ -26,7 +29,7 @@ async function processStdin() {
 
 /**
  * Groups phrases of three consecutive words from a string and counts their occurrences
- * @param {string} str - The input text containing the phrases that need to be analyzed
+ * @param {readline.Interface} rl  - The readline interface for reading input lines asynchronously
  * @returns {Object} - An object mapping each unique three-word phrase to its occurences.
  */
 async function groupPhrases(rl){
@@ -39,7 +42,7 @@ async function groupPhrases(rl){
     for await (const line of rl) {
         for (let i = 0; i <= line.length; i++) {
             // Check if current character is not a part of a valid word (Unicode letters, apostrophes, hyphens)
-            if (!line[i]?.match(/[\p{L}\p{M}'-]+/u) || i === line.length) { // Updated regex pattern
+            if (!line[i]?.match(/[\p{L}\p{M}'-]+/u) || i === line.length) { 
                 if (word !== '') {
                     words[wordCount] = word.toLowerCase(); // Convert word to lowercase and store in words array
                     wordCount += 1; // Move to the next word position
@@ -71,7 +74,7 @@ async function groupPhrases(rl){
 
 
 /**
- * Merges two phrase frequency maps, combining their counts for common keys and adding unique keys.
+ * Merges two phrase frequency maps, combining their counts for common keys and adding any other unique keys.
  * @param {Object} map1 - The first map containing phrase-frequency pairs.
  * @param {Object} map2 - The second map containing phrase-frequency pairs to merge with map1.
  * @returns {Object} - A new map with merged phrase frequencies from map1 and map2.
@@ -100,27 +103,27 @@ function mergePhraseFreqMaps(map1, map2) {
 }
 
 /**
- * Asynchronously processes a file to generate a map of phrase frequencies.
+ * Processes a file to generate a map of phrase frequencies.
  * Reads the file, groups phrases, merges results, and returns the final map.
  * @param {string} filename - The name of the file to process.
  * @returns {Promise<Object>} - A promise resolving to an object containing phrase frequencies.
  */
 async function processFile(filename){
-   // Read file content asynchronously
-   // const content = await fs.readFile(filename, 'utf8');
-
     // Group phrases from content
     const readStream = fs.createReadStream(filename, { encoding: 'utf8' });
 
+    // Create readline interface to read from standard input
     const rl = readline.createInterface({
         input: readStream,
         crlfDelay: Infinity // Read entire lines without truncating
     });
 
     try{
+        // Call groupPhrases function asynchronously with the readline interface
         let phraseMap = await groupPhrases(rl);
         return phraseMap;
     } finally{
+        // Close the readline interface after processing
         rl.close()
     }
     
@@ -139,10 +142,15 @@ function printTopPhrases(map, n) {
     console.log(topPhrases);
 }
 
-
+/**
+ * Main function orchestrating the text analysis process.
+ * processes filenames provided via command-line arguments or standard input,
+ * merges results from multiple files, and prints the top phrases by frequency.
+ */
 async function main() {
     let executionTimerLabel = `Time Taken To Process`;
-    console.time(executionTimerLabel); // Start the timer
+    console.time(executionTimerLabel); // Start the timer to measure execution time
+    
     let resultMap = {}; // Initialize empty result map
 
     if (filenames.length > 0) { // Check if filenames are provided
@@ -162,6 +170,11 @@ async function main() {
                     }
                 });
             });
+    } else if (process.stdin.isTTY) {
+        // Check if stdin is not provided by terminal
+        console.log('No filenames provided and no stdin available.');
+        console.timeEnd(executionTimerLabel); // End the timer and log the time without further processing
+        return;
     } else {
         resultMap = await processStdin(); // Process stdin if no filenames are provided
     }
@@ -175,4 +188,5 @@ if (require.main === module) {
     main();
 }
 
+// Exports functions for unit testing: groupPhrases, mergePhraseFreqMaps, processFile
 module.exports = { groupPhrases, mergePhraseFreqMaps, processFile };

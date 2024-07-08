@@ -19,12 +19,11 @@ function colorizeRed(message) {
     return `\x1b[31m${message}\x1b[0m`; 
 }
 
-// Helper function to create a temporary file
+// Helper function to create a temporary file and temporary read stream given some text
 function createStream(content) {
     const tempFilePath = path.join(__dirname, 'unit-test.txt');
     fs.writeFileSync(tempFilePath, content, 'utf8');
 
-    //fs.close();
 
     const readStream = fs.createReadStream(tempFilePath, { encoding: 'utf8' });
 
@@ -159,6 +158,9 @@ function testProcessInvalidFile(){
     }
 }
 
+/**
+ * Main function orchestrating the execution of all test functions
+ */
 async function main(){
     await testIgnoresPunctuation();
     await testLineEndings();
