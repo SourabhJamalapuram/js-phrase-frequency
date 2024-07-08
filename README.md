@@ -23,8 +23,15 @@ Two text files are included in the repository if you would like to use them for 
   - Mac: `docker run -v "$(pwd)/files":/inputs sourabhjam/sequence-analyzer inputs/<filename>`
   - Windows: `docker run -v c:/temp:/inputs sourabhjam/sequence-analyzer inputs/<filename>`
 
-## Sample Run
+## Testing
+### Running Unit Tests
+`node unit-tests.js`
 
+<img width="435" alt="Screen Shot 2024-07-08 at 3 44 56 PM" src="https://github.com/SourabhJamalapuram/js-phrase-frequency/assets/11035797/32ff65a5-ae3c-4f65-88f9-5d2333e6f7d2">
+
+
+
+## Sample Run
 
 
 ## Program Overview
@@ -45,3 +52,4 @@ Two text files are included in the repository if you would like to use them for 
 
 
 ## Are There Bugs That You Are Aware Of
+No bugs that I am aware of
