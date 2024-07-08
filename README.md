@@ -2,7 +2,7 @@
 ### Without Docker
 1. Install Node.js (https://nodejs.org/en/download/package-manager)
 2. `git clone <repo name>`
-3. Open up terminal and go to project directory
+3. Navigate to project directory via terminal
 4. Run the program
    - `cat <filename> | node main.js`
    - `node main.js <filename1> <filename2> ...`
