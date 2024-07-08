@@ -1,7 +1,7 @@
 const fs = require('fs');
 const readline = require('readline');
 
-const TOP_N_PHRASES = 5;
+const TOP_N_PHRASES = 100;
 
 //List of filename(s) provided by user through command line arguments
 const filenames = process.argv.slice(2);
