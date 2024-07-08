@@ -39,9 +39,10 @@ function createStream(content) {
 /**
  * Unit test to verify that groupPhrases correctly ignores punctuation.
  */
-async function testIgnoresPunctuation(content) {
+async function testIgnoresPunctuation() {
     const { groupPhrases } = mainModule;
 
+    let content = 'This sentence, with its commas and periods. Is it ignoring correctly? This should be analyzed correctly!';
     let rl = createStream(content)
 
     try {
@@ -63,14 +64,15 @@ async function testIgnoresPunctuation(content) {
 /**
  * Unit test to verify that groupPhrases correctly ignores line endings.
  */
-async function testLineEndings(content) {
+async function testLineEndings() {
     const { groupPhrases } = mainModule;
 
+    let content = 'This sentence, with its\n line endings';
     let rl = createStream(content)
     try {
         let freqMap = await groupPhrases(rl);
     
-        assert.strictEqual(freqMap['test this phrase'], 1, 'Sequence should ignore line ending');
+        assert.strictEqual(freqMap['its line endings'], 1, 'Sequence should ignore line ending');
         console.log(colorizeGreen('\u2714 Passed: Ignores Line Endings'));
     } catch (err) {
 
@@ -83,14 +85,15 @@ async function testLineEndings(content) {
 /**
  * Unit test to verify that groupPhrases correctly ensures case is ignored
  */
-async function testIsCaseInsensitive(content) {
+async function testIsCaseInsensitive() {
     const { groupPhrases } = mainModule;
 
+    let content = 'THIS is upper. this is upper. This is upper'
     let rl = createStream(content)
     try {
         let freqMap = await groupPhrases(rl);
     
-        assert.strictEqual(freqMap['this sentence with'], 1, 'Sequence should be case insensitive');
+        assert.strictEqual(freqMap['this is upper'], 3, 'Sequence should be case insensitive');
         console.log(colorizeGreen('\u2714 Passed: Is Case Insensitive'));
     } catch (err) {
         console.error(colorizeRed(`\u2714 Failed - Is Case Insensitive: ${err.message}`));
@@ -102,9 +105,10 @@ async function testIsCaseInsensitive(content) {
 /**
  * Unit test to verify that contractions are handled properly
  */
-async function testHandlesContractions(content) {
+async function testHandlesContractions() {
     const { groupPhrases } = mainModule;
 
+    let content = "this shouldn't fail";
     let rl = createStream(content)
     try {
         let freqMap = await groupPhrases(rl);
@@ -155,23 +159,16 @@ function testProcessInvalidFile(){
     }
 }
 
-
 async function main(){
-
-    let content = 'This sentence, with its commas and periods. Is it ignoring correctly? This should be analyzed correctly!';
-
     await testIgnoresPunctuation();
-    await testLineEndings(content);
-    await testIsCaseInsensitive(content);
-    await testHandlesContractions(content);
-
-    /*
+    await testLineEndings();
+    await testIsCaseInsensitive();
+    await testHandlesContractions();
+    
     testMergeMaps();
     testProcessInvalidFile();
-    */
 
-   //fs.unlinkSync(tempFilePath);
-
+    fs.unlinkSync(path.join(__dirname, 'unit-test.txt'));
 }
 
 main()
